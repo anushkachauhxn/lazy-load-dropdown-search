@@ -6,6 +6,7 @@ const LazyDropdown = () => {
   const [dropdownSearch, setDropdownSearch] = useState("");
   const [dropdownOptions, setDropdownOptions] = useState([]);
   const [selectedValue, setSelectedValue] = useState(null);
+  const [resetFlag, setResetFlag] = useState(false);
 
   const resetList = () => {
     setSelectedValue(null);
@@ -15,7 +16,6 @@ const LazyDropdown = () => {
   }
 
   const getDropdownList = (pageCount, reset=false) => {
-    console.log("getDropdownList", pageCount, reset);
     const paginationApiUrl = `https://rickandmortyapi.com/api/character/?page=${pageCount}`;
     fetch(paginationApiUrl)
       .then((response) => response.json())
@@ -24,6 +24,7 @@ const LazyDropdown = () => {
         if (result && result.length > 0) {
           if (reset) {
             setDropdownOptions(result);
+            setResetFlag(false);
           }
           else if (!dropdownOptions.includes(result[0])) {
             let options = dropdownOptions.concat(result);
@@ -47,7 +48,7 @@ const LazyDropdown = () => {
 
   const handleScrollDownEvent = () => {
     const lazyContainer = document.querySelector("#lazyDropdownSearch-listbox");
-    if (lazyContainer && dropdownOptions && dropdownOptions.length > 0) {
+    if (lazyContainer && dropdownOptions && dropdownOptions.length > 0 && dropdownSearch.length === 0) {
       lazyContainer.addEventListener("scrollend", (event) => {
         if (Math.abs(lazyContainer.scrollHeight - lazyContainer.scrollTop - lazyContainer.clientHeight) < 5) {
           setPageCount((count) => count + 1);
@@ -57,19 +58,26 @@ const LazyDropdown = () => {
   }
 
   useEffect(() => {
-    if (dropdownSearch && dropdownSearch.length > 0) {
-      getDropdownSearchList(dropdownSearch);
-    } else {
-      getDropdownList(pageCount);
+    if (!resetFlag) {
+      if (dropdownSearch && dropdownSearch.length > 0) {
+        getDropdownSearchList(dropdownSearch);
+      } else {
+        getDropdownList(pageCount);
+      }
     }
   }, [dropdownSearch, pageCount]);
+  
+  useEffect(() => {
+    if (resetFlag) {
+      resetList();
+    }
+  }, [resetFlag]);
 
   return (
     <Autocomplete
       id="lazyDropdownSearch"
       value={selectedValue}
       options={dropdownOptions}
-      blurOnSelect={true}
       autoComplete={true}
       getOptionLabel={(option) => option.name || ""}
       renderInput={(params) => (
@@ -92,14 +100,15 @@ const LazyDropdown = () => {
       onInputChange={(event, value, reason) => {
         if (reason === "input") {
           setDropdownSearch(value);
+        } else if (reason === "reset" && event?.type === "blur") {
+          setResetFlag(true);
         }
       }}
       onChange={(event, option, reason) => {
         if (reason === "selectOption") {
           setSelectedValue(option);
-        }
-        if (reason === "clear") {
-          resetList();
+        } else if (reason === "clear") {
+          setResetFlag(true);
         }
       }}
       onOpen={() => {
