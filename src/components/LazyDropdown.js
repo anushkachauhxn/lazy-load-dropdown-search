@@ -49,7 +49,7 @@ const LazyDropdown = () => {
   const handleScrollDownEvent = () => {
     const lazyContainer = document.querySelector("#lazyDropdownSearch-listbox");
     if (lazyContainer && dropdownOptions && dropdownOptions.length > 0 && dropdownSearch.length === 0) {
-      lazyContainer.addEventListener("scrollend", (event) => {
+      lazyContainer.addEventListener("scroll", (event) => {
         if (Math.abs(lazyContainer.scrollHeight - lazyContainer.scrollTop - lazyContainer.clientHeight) < 5) {
           setPageCount((count) => count + 1);
         }
@@ -78,7 +78,6 @@ const LazyDropdown = () => {
       id="lazyDropdownSearch"
       value={selectedValue}
       options={dropdownOptions}
-      autoComplete={true}
       getOptionLabel={(option) => option.name || ""}
       renderInput={(params) => (
         <TextField
@@ -110,7 +109,11 @@ const LazyDropdown = () => {
           setSelectedValue(option);
         }
         if (reason === "clear") {
-          setResetFlag(true);
+          if (dropdownSearch.length > 0) {
+            setResetFlag(true);
+          } else {
+            setSelectedValue(null);
+          }
         }
       }}
       onOpen={() => {
