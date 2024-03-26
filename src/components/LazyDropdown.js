@@ -100,14 +100,16 @@ const LazyDropdown = () => {
       onInputChange={(event, value, reason) => {
         if (reason === "input") {
           setDropdownSearch(value);
-        } else if (reason === "reset" && event?.type === "blur") {
+        }
+        if ((reason === "input" && value.length === 0) || (reason === "reset" && event?.type === "blur")) {
           setResetFlag(true);
         }
       }}
       onChange={(event, option, reason) => {
         if (reason === "selectOption") {
           setSelectedValue(option);
-        } else if (reason === "clear") {
+        }
+        if (reason === "clear") {
           setResetFlag(true);
         }
       }}
